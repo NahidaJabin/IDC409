@@ -1,0 +1,67 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import sqlite3
+
+# Send a request to the website and parse the HTML
+response = requests.get('https://www.nitt.edu/home/academics/departments/faculty/')
+soup = BeautifulSoup(response.text, 'html.parser')
+data = []
+
+table = soup.find("table")
+
+if table:
+    rows = table.find_all('tr')
+
+    for row in rows:
+        cols = row.find_all('td')
+        cols = [col.text.strip() for col in cols]
+        data.append(cols)
+
+# Create a DataFrame
+df = pd.DataFrame(data)
+# Take only the desired columns
+df = df.iloc[:, [2, 3, 4, 5, 6]]  # Select the last five columns by index
+
+# Rename the columns for clarity
+df.columns = ['NAME', 'GENDER', 'DESIGNATION', 'DEPARTMENT', 'EMAIL_ID']
+
+# Create a SQLite database and a table to store the data
+conn = sqlite3.connect('nitt_faculty.db')
+cursor = conn.cursor()
+# Drop the existing faculty table if it exists
+cursor.execute('DROP TABLE IF EXISTS faculty')
+
+# Create a new table named 'faculty' with the last five columns
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS faculty (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        NAME TEXT,
+        GENDER TEXT,
+        DESIGNATION TEXT,
+        DEPARTMENT TEXT,
+        EMAIL_ID TEXT
+    )
+''')
+
+# Insert the data from the DataFrame into the SQLite table
+for index, row in df.iterrows():
+    cursor.execute('INSERT INTO faculty (NAME, GENDER, DESIGNATION, DEPARTMENT, EMAIL_ID) VALUES (?, ?, ?, ?, ?)', (row['NAME'], row['GENDER'], row['DESIGNATION'], row['DEPARTMENT'], row['EMAIL_ID']))
+
+# Commit the changes
+conn.commit()
+
+# Print the DataFrame
+print("DataFrame (df):")
+print(df)
+
+# Print the SQLite table
+print("\nSQLite Table (faculty)")
+cursor.execute("SELECT * FROM faculty")
+for row in cursor.fetchall():
+    print(row)
+
+# Close the database connection
+conn.close()
+
+print("\nData has been successfully stored in the SQLite database.")
