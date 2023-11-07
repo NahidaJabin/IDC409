@@ -1,0 +1,53 @@
+import requests
+from bs4 import BeautifulSoup
+import sqlite3
+
+url = "https://www.iisertvm.ac.in/faculty/"
+
+response = requests.get(url)
+soup = BeautifulSoup(response.content, 'html.parser')
+
+faculty_data = []
+
+faculty_list = soup.find_all("div", class_="faculty_wrapper")
+if faculty_list:
+    for faculty in faculty_list:
+        names = faculty.find_all("div", class_="faculty_name")
+        designations = faculty.find_all("div", class_="faculty_designation")
+        research_areas = faculty.find_all("div", class_="faculty_research_area")
+
+        for name, designation, research_area in zip(names, designations, research_areas):
+            faculty_name = name.text.strip()
+            faculty_designation = designation.text.strip()
+            faculty_research_area = research_area.text.strip()
+            faculty_data.append((faculty_name, faculty_designation, faculty_research_area))
+else:
+    print("No faculty information found on the page.")
+
+# Create an SQLite database and insert the data
+conn = sqlite3.connect('iisertvm_faculty.db')
+cursor = conn.cursor()
+
+# Create a faculty table
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS faculty (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        designation TEXT,
+        research_area TEXT
+    )
+''')
+
+# Insert the scraped data into the table
+if faculty_data:
+    cursor.executemany('INSERT INTO faculty (name, designation, research_area) VALUES (?, ?, ?)', faculty_data)
+    conn.commit()
+    print("Data successfully stored in the SQLite database.")
+else:
+    print("No data to insert into the database.")
+cursor.execute('SELECT * FROM faculty')
+for row in cursor.fetchall():
+    print(row)
+
+# Close the database connection
+conn.close()
