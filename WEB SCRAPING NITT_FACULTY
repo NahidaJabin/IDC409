@@ -51,9 +51,6 @@ for index, row in df.iterrows():
 # Commit the changes
 conn.commit()
 
-# Print the DataFrame
-print("DataFrame (df):")
-print(df)
 
 # Print the SQLite table
 print("\nSQLite Table (faculty)")
