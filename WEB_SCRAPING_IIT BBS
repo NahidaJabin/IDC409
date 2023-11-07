@@ -30,7 +30,7 @@ df = pd.DataFrame(data)
 df.columns = ['Name', 'designation', 'school', 'contact', 'email_id']  # Rename the columns for clarity
 
 # Create a SQLite database and a table to store the data
-conn = sqlite3.connect('iit_mandi_faculty.db')
+conn = sqlite3.connect('iit_bbs_faculty.db')
 cursor = conn.cursor()
 
 # Create a table named 'faculty' with three columns
