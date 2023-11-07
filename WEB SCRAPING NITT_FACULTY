@@ -1,3 +1,4 @@
+
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -29,6 +30,7 @@ df.columns = ['NAME', 'GENDER', 'DESIGNATION', 'DEPARTMENT', 'EMAIL_ID']
 # Create a SQLite database and a table to store the data
 conn = sqlite3.connect('nitt_faculty.db')
 cursor = conn.cursor()
+
 # Drop the existing faculty table if it exists
 cursor.execute('DROP TABLE IF EXISTS faculty')
 
@@ -51,6 +53,9 @@ for index, row in df.iterrows():
 # Commit the changes
 conn.commit()
 
+# Print the DataFrame
+print("DataFrame (df):")
+print(df)
 
 # Print the SQLite table
 print("\nSQLite Table (faculty)")
