@@ -1,0 +1,58 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import sqlite3
+
+# Send a request to the website and parse the HTML
+response = requests.get('https://www.iitmandi.ac.in/allfaculty.php')
+soup = BeautifulSoup(response.text, 'html.parser')
+data = []
+
+table = soup.find("table")
+
+if table:
+    rows = table.find_all('tr')
+
+    for row in rows:
+        cols = row.find_all('td')
+        cols = [col.text.strip() for col in cols]
+        data.append(cols)
+
+# Create a DataFrame
+df = pd.DataFrame(data)
+df.columns = ['Position', 'Name', 'Email']  # Rename the columns for clarity
+
+# Create a SQLite database and a table to store the data
+conn = sqlite3.connect('iit_mandi_faculty.db')
+cursor = conn.cursor()
+# Create a table named 'faculty' with three columns
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS faculty (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        Position TEXT,
+        Name TEXT,
+        Email TEXT
+    )
+''')
+
+# Insert the data from the DataFrame into the SQLite table
+for index, row in df.iterrows():
+    cursor.execute('INSERT INTO faculty (Position, Name, Email) VALUES (?, ?, ?)', (row['Position'], row['Name'], row['Email']))
+
+# Commit the changes
+conn.commit()
+
+# Print the DataFrame
+print("DataFrame (df):")
+print(df)
+
+# Print the SQLite table
+print("\nSQLite Table (faculty):")
+cursor.execute("SELECT * FROM faculty")
+for row in cursor.fetchall():
+    print(row)
+
+# Close the database connection
+conn.close()
+
+print("\nData has been successfully stored in the SQLite database.")
