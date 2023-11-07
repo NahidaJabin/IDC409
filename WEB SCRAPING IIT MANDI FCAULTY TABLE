@@ -8,15 +8,14 @@ response = requests.get('https://www.iitmandi.ac.in/allfaculty.php')
 soup = BeautifulSoup(response.text, 'html.parser')
 data = []
 
-table = soup.find("table")
-
-if table:
-    rows = table.find_all('tr')
-
-    for row in rows:
-        cols = row.find_all('td')
-        cols = [col.text.strip() for col in cols]
-        data.append(cols)
+tables = soup.find_all("table")
+for table in tables:
+    if table:
+        rows = table.find_all('tr')
+        for row in rows:
+            cols = row.find_all('td')
+            cols = [col.text.strip() for col in cols]
+            data.append(cols)
 
 # Create a DataFrame
 df = pd.DataFrame(data)
@@ -25,19 +24,24 @@ df.columns = ['Position', 'Name', 'Email']  # Rename the columns for clarity
 # Create a SQLite database and a table to store the data
 conn = sqlite3.connect('iit_mandi_faculty.db')
 cursor = conn.cursor()
-# Create a table named 'faculty' with three columns
+
+# Drop the existing 'faculty' table if it exists
+cursor.execute('DROP TABLE IF EXISTS faculty')
+
+# Create a new table named 'faculty' with three columns
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS faculty (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         Position TEXT,
         Name TEXT,
-        Email TEXT
+        Email TEXT,
+        UNIQUE(Email)
     )
 ''')
 
 # Insert the data from the DataFrame into the SQLite table
 for index, row in df.iterrows():
-    cursor.execute('INSERT INTO faculty (Position, Name, Email) VALUES (?, ?, ?)', (row['Position'], row['Name'], row['Email']))
+    cursor.execute('INSERT OR IGNORE INTO faculty (Position, Name, Email) VALUES (?, ?, ?)', (row['Position'], row['Name'], row['Email']))
 
 # Commit the changes
 conn.commit()
@@ -50,5 +54,3 @@ for row in cursor.fetchall():
 
 # Close the database connection
 conn.close()
-
-print("\nData has been successfully stored in the SQLite database.")
