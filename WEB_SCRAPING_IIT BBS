@@ -33,6 +33,8 @@ df.columns = ['Name', 'designation', 'school', 'contact', 'email_id']  # Rename 
 conn = sqlite3.connect('iit_bbs_faculty.db')
 cursor = conn.cursor()
 
+# Drop the existing faculty table if it exists
+cursor.execute('DROP TABLE IF EXISTS faculty')
 # Create a table named 'faculty' with three columns
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS faculty (
@@ -52,7 +54,6 @@ for index, row in df.iterrows():
 conn.commit()
 
 # Print the DataFrame
-# print("DataFrame (df):")
 # print(df)
 
 # Print the SQLite table
