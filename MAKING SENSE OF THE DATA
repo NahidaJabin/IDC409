@@ -1,0 +1,105 @@
+import sqlite3
+
+# Function to search for a faculty member by name
+def search_faculty_by_name(db_name, faculty_name):
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+
+    # Search for the faculty member by name
+    cursor.execute("SELECT * FROM faculty WHERE NAME LIKE ?", ('%' + faculty_name + '%',))
+    faculty_data = cursor.fetchall()
+
+    # Close the database connection
+    conn.close()
+
+    return faculty_data
+
+# Search for a faculty member by name
+faculty_name_to_search = 'Dr.OSWALD C'
+search_result = search_faculty_by_name('nitt_faculty.db', faculty_name_to_search)
+
+# Display search results
+if search_result:
+    print(f"Details for {faculty_name_to_search}:")
+    for row in search_result:
+        print(row)
+else:
+    print(f"No results found for {faculty_name_to_search}.")
+
+
+--------------------------------------------------------------------------------------------------------------------------------------
+import sqlite3
+import matplotlib.pyplot as plt
+
+# Connect to the SQLite database
+conn = sqlite3.connect('iit_bbs_faculty.db')
+
+# Retrieve data from the SQLite table, excluding NULL values in 'school'
+cursor = conn.cursor()
+cursor.execute("SELECT school, COUNT(*) FROM faculty WHERE school IS NOT NULL AND school != '' GROUP BY school")
+school_data = cursor.fetchall()
+
+# Close the database connection
+conn.close()
+
+# Unpack school names and faculty counts
+schools, faculty_counts = zip(*school_data)
+
+# Plotting the data
+plt.figure(figsize=(10, 6))
+plt.bar(schools, faculty_counts, color='lightcoral')
+plt.xlabel('Schools')
+plt.ylabel('Number of Faculties')
+plt.title('Number of Faculties in Each School')
+plt.xticks(rotation=90)
+plt.tight_layout()
+
+# Show the plot
+plt.show()
+--------------------------------------------------------------------------------------------------------------------------------------
+
+import sqlite3
+
+def search_faculty_by_department(db_name, department):
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM faculty WHERE DEPARTMENT = ?", (department,))
+    faculty_data = cursor.fetchall()
+
+    conn.close()
+
+    return faculty_data
+
+department = 'CSE'
+results = search_faculty_by_department('nitt_faculty.db', department)
+
+if results:
+    print(f"Faculty in the {department} department:")
+    for row in results:
+        print(row)
+else:
+    print(f"No faculty found in the {department} department.")
+
+--------------------------------------------------------------------------------------------------------------------------------------
+import sqlite3
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Retrieve faculty data from the SQLite database
+conn = sqlite3.connect('iit_mandi_faculty.db')
+df = pd.read_sql_query("SELECT * FROM faculty", conn)
+conn.close()
+
+# Visualization: Faculty Distribution by Position
+plt.figure(figsize=(10, 6))
+position_counts = df['Position'].value_counts()
+position_counts.plot(kind='bar', color='skyblue')
+plt.title('Faculty Distribution by Position')
+plt.xlabel('Position')
+plt.ylabel('Number of Faculty')
+plt.xticks(rotation=45, ha='right')  # Rotate and align x-axis labels
+
+plt.tight_layout()
+plt.show()
+--------------------------------------------------------------------------------------------------------------------------------------
